@@ -1,0 +1,1 @@
+[2025-11-10T21:44:39.701+0000] {task_context_logger.py:104} ERROR - Executor reports task instance <TaskInstance: gcp_connection_test.test_connection manual__2025-11-10T21:44:36.997020+00:00 [queued]> finished (failed) although the task says it's queued. (Info: None) Was the task killed externally?

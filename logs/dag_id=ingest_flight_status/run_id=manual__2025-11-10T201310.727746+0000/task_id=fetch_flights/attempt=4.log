@@ -1,0 +1,46 @@
+[2025-11-10T20:19:24.534+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2025-11-10T20:19:24.551+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: ingest_flight_status.fetch_flights manual__2025-11-10T20:13:10.727746+00:00 [queued]>
+[2025-11-10T20:19:24.559+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: ingest_flight_status.fetch_flights manual__2025-11-10T20:13:10.727746+00:00 [queued]>
+[2025-11-10T20:19:24.561+0000] {taskinstance.py:2306} INFO - Starting attempt 4 of 4
+[2025-11-10T20:19:24.573+0000] {taskinstance.py:2330} INFO - Executing <Task(PythonOperator): fetch_flights> on 2025-11-10 20:13:10.727746+00:00
+[2025-11-10T20:19:24.581+0000] {warnings.py:110} WARNING - /home/***/.local/lib/python3.12/site-packages/***/task/task_runner/standard_task_runner.py:61: DeprecationWarning: This process (pid=349) is multi-threaded, use of fork() may lead to deadlocks in the child.
+  pid = os.fork()
+
+[2025-11-10T20:19:24.583+0000] {standard_task_runner.py:63} INFO - Started process 352 to run task
+[2025-11-10T20:19:24.583+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'ingest_flight_status', 'fetch_flights', 'manual__2025-11-10T20:13:10.727746+00:00', '--job-id', '12', '--raw', '--subdir', 'DAGS_FOLDER/ingest_flight_status.py', '--cfg-path', '/tmp/tmp41ph_xad']
+[2025-11-10T20:19:24.585+0000] {standard_task_runner.py:91} INFO - Job 12: Subtask fetch_flights
+[2025-11-10T20:19:24.661+0000] {task_command.py:426} INFO - Running <TaskInstance: ingest_flight_status.fetch_flights manual__2025-11-10T20:13:10.727746+00:00 [running]> on host 96b856182cef
+[2025-11-10T20:19:24.754+0000] {taskinstance.py:2648} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='ingest_flight_status' AIRFLOW_CTX_TASK_ID='fetch_flights' AIRFLOW_CTX_EXECUTION_DATE='2025-11-10T20:13:10.727746+00:00' AIRFLOW_CTX_TRY_NUMBER='4' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-11-10T20:13:10.727746+00:00'
+[2025-11-10T20:19:24.757+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2025-11-10T20:19:24.767+0000] {base.py:84} INFO - Using connection ID 'aviationstack_api' for task execution.
+[2025-11-10T20:19:24.776+0000] {base.py:84} INFO - Using connection ID 'aviationstack_api' for task execution.
+[2025-11-10T20:19:24.777+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2025-11-10T20:19:24.778+0000] {taskinstance.py:2905} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 465, in _execute_task
+    result = _execute_callable(context=context, **execute_callable_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 432, in _execute_callable
+    return execute_callable(context=context, **execute_callable_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/baseoperator.py", line 400, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/operators/python.py", line 235, in execute
+    return_value = self.execute_callable()
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/operators/python.py", line 252, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/airflow/dags/ingest_flight_status.py", line 38, in _fetch_flights
+    resp = http.run(endpoint=REQUEST_PATH, data=None, headers=None, extra_options={"check_response": True}, params=params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/providers/http/hooks/http.py", line 177, in run
+    req = requests.Request(self.method, url, params=data, headers=headers, **request_kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: requests.models.Request() got multiple values for keyword argument 'params'
+[2025-11-10T20:19:24.795+0000] {taskinstance.py:1206} INFO - Marking task as FAILED. dag_id=ingest_flight_status, task_id=fetch_flights, run_id=manual__2025-11-10T20:13:10.727746+00:00, execution_date=20251110T201310, start_date=20251110T201924, end_date=20251110T201924
+[2025-11-10T20:19:24.809+0000] {standard_task_runner.py:110} ERROR - Failed to execute job 12 for task fetch_flights (requests.models.Request() got multiple values for keyword argument 'params'; 352)
+[2025-11-10T20:19:24.841+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 1
+[2025-11-10T20:19:24.873+0000] {taskinstance.py:3498} INFO - 0 downstream tasks scheduled from follow-on schedule check
+[2025-11-10T20:19:24.880+0000] {local_task_job_runner.py:222} INFO - ::endgroup::
