@@ -15,7 +15,12 @@ BUCKET_NAME = "flight-intel-raw"
 def _fetch_flights(**context):
     http = HttpHook(http_conn_id="aviationstack_api", method="GET")
     endpoint = "flights"
-    params = {"access_key": API_KEY, "limit": 10}
+    params = {
+    "access_key": API_KEY,
+    "limit": 50,
+    "airline_iata": "AA,DL,UA,B6,WN,AS,F9,NK",  # Major U.S. airlines
+    "arr_iata": "JFK,LAX,ORD,ATL,DFW,MIA,BOS,SFO,DEN,SEA",  # Major US airports
+    }
     # IMPORTANT: for HttpHook GET, pass query params via `data=...`
     resp = http.run(endpoint=endpoint, data=params)
     data = resp.json()
@@ -40,7 +45,7 @@ def _upload_to_gcs(**context):
 with DAG(
     "ingest_flight_status",
     default_args=default_args,
-    schedule_interval=None,
+    schedule_interval="@hourly",
     catchup=False,
 ) as dag:
 
