@@ -13,37 +13,70 @@ default_args = {"owner": "airflow", "start_date": datetime(2025, 1, 1)}
 
 BUCKET_NAME = "flight-intel-raw"
 def _fetch_flights(**context):
-    http = HttpHook(http_conn_id="aviationstack_api", method="GET")
-    endpoint = "flights"
+    import requests, time, json
+
+    url = "https://opensky-network.org/api/states/all"
     params = {
-    "access_key": API_KEY,
-    "limit": 50,
-    "airline_iata": "AA,DL,UA,B6,WN,AS,F9,NK",  # Major U.S. airlines
-    "arr_iata": "JFK,LAX,ORD,ATL,DFW,MIA,BOS,SFO,DEN,SEA",  # Major US airports
+        "lamin": 24.396308,  # min latitude (Florida Keys)
+        "lomin": -125.0,     # min longitude (California)
+        "lamax": 49.384358,  # max latitude (Northern border)
+        "lomax": -66.93457,  # max longitude (Maine)
     }
-    # IMPORTANT: for HttpHook GET, pass query params via `data=...`
-    resp = http.run(endpoint=endpoint, data=params)
+
+    resp = requests.get(url, params=params, timeout=30)
+    resp.raise_for_status()
     data = resp.json()
-    context["ti"].xcom_push(key="flights_data", value=data)
-    return data
+
+    # Extract timestamp and state vectors
+    timestamp = data.get("time", int(time.time()))
+    states = data.get("states", [])
+
+    # Map each flight array into a dict using OpenSky's index reference
+    columns = [
+        "icao24", "callsign", "origin_country", "time_position", "last_contact",
+        "longitude", "latitude", "baro_altitude", "on_ground", "velocity",
+        "true_track", "vertical_rate", "sensors", "geo_altitude", "squawk",
+        "spi", "position_source", "category"
+    ]
+
+    flights = []
+    for s in states:
+        record = dict(zip(columns, s[:len(columns)]))
+        record["timestamp"] = timestamp
+        flights.append(record)
+
+    context["ti"].xcom_push(key="flights_data", value=flights)
+    print(f"✅ Retrieved {len(flights)} flights over the U.S. from OpenSky.")
+    return flights
+
 
 
 def _upload_to_gcs(**context):
+    from airflow.providers.google.cloud.hooks.gcs import GCSHook
+    import json
+    from datetime import datetime
+
     ti = context["ti"]
-    data = ti.xcom_pull(task_ids="fetch_flights", key="flights_data")
-    filename = f"flights_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    flights = ti.xcom_pull(task_ids="fetch_flights", key="flights_data")
+
+    filename = f"opensky_us_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     local_path = f"/opt/airflow/logs/{filename}"
 
-    # Save locally
+    # Write newline-delimited JSON
     with open(local_path, "w") as f:
-        json.dump(data, f)
+        for record in flights:
+            json.dump(record, f)
+            f.write("\n")
 
-    # Upload to GCS
     gcs = GCSHook(gcp_conn_id="google_cloud_default")
     gcs.upload(BUCKET_NAME, filename, local_path)
 
+    print(f"☁️ Uploaded {len(flights)} flights to {BUCKET_NAME}/{filename}")
+
+
+
 with DAG(
-    "ingest_flight_status",
+    "ingest_flight_status_usa",
     default_args=default_args,
     schedule_interval="@hourly",
     catchup=False,
@@ -64,8 +97,8 @@ with DAG(
     load_bq = GCSToBigQueryOperator(
         task_id="load_to_bigquery",
         bucket=BUCKET_NAME,
-        source_objects=["flights_*.json"],  # wildcard matches all uploads
-        destination_project_dataset_table="flight-intel-platform.flights_dataset.flights_raw",
+        source_objects=["opensky_us_*.json"],
+        destination_project_dataset_table="flight-intel-platform.us_flights_dataset.opensky_flights_raw",
         source_format="NEWLINE_DELIMITED_JSON",
         autodetect=True,
         write_disposition="WRITE_APPEND",
